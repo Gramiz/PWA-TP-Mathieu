@@ -1,36 +1,27 @@
 import { createServer } from 'node:http';
-import { mkdir, readFile, writeFile, rename } from 'node:fs/promises';
+import { mkdir, readFile } from 'node:fs/promises';
 import { resolve, extname } from 'node:path';
 import { handleFoods } from '../netlify/lib/api.js';
+import { localStore } from '../netlify/lib/local-store.mjs';
+import { handlePush } from '../netlify/lib/push.js';
 
 const port = Number(process.env.PORT || 8888);
 const root = resolve('dist');
 const dataRoot = resolve('.local-data');
 await mkdir(dataRoot, { recursive: true });
-const store = {
-  async get(key) {
-    try { return JSON.parse(await readFile(resolve(dataRoot, `${key}.json`), 'utf8')); }
-    catch (error) { if (error.code === 'ENOENT') return null; throw error; }
-  },
-  async setJSON(key, value) {
-    const target = resolve(dataRoot, `${key}.json`);
-    await mkdir(resolve(target, '..'), { recursive: true });
-    const temporary = `${target}.${crypto.randomUUID()}.tmp`;
-    await writeFile(temporary, JSON.stringify(value));
-    await rename(temporary, target);
-  },
-};
+const store = localStore(dataRoot);
+const pushStore = localStore(resolve(dataRoot, 'push-subscriptions'));
 const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.webmanifest': 'application/manifest+json', '.png': 'image/png', '.txt': 'text/plain; charset=utf-8', '.xml': 'application/xml' };
 const csp = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; media-src 'self' blob:; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'";
 createServer(async (req, res) => {
   try {
     const url = new URL(req.url, `http://${req.headers.host}`);
-    if (url.pathname === '/api/foods') {
+    if (url.pathname === '/api/foods' || url.pathname.startsWith('/api/push')) {
       let length = 0; const chunks = [];
       for await (const chunk of req) { length += chunk.length; if (length > 420000) { res.writeHead(413); res.end('Trop volumineux'); return; } chunks.push(chunk); }
       const body = Buffer.concat(chunks);
       const request = new Request(url, { method: req.method, headers: req.headers, ...(body.length ? { body } : {}) });
-      const result = await handleFoods(request, store);
+      const result = url.pathname === '/api/foods' ? await handleFoods(request, store) : await handlePush(request, pushStore);
       res.writeHead(result.status, Object.fromEntries(result.headers)); res.end(Buffer.from(await result.arrayBuffer())); return;
     }
     if (!['GET', 'HEAD'].includes(req.method)) { res.writeHead(405); res.end(); return; }

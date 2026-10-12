@@ -1,5 +1,6 @@
-import { dbPromise, saveFood, deleteFood } from './db.js';
+import { dbPromise, saveFood, deleteFood, updateFood, resolveConflict } from './db.js';
 import { flushOutbox } from './sync.js';
+import { setupShare, setShareFoods, setupPush } from './capabilities.js';
 
 const $ = selector => document.querySelector(selector);
 const dateFormatter = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -10,6 +11,7 @@ let photoData = null;
 let stream = null;
 let startingCamera = false;
 let saving = false;
+let editingFood = null;
 
 const foodIcon = '<svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M7 11h18l-2 16H9zM5 6h22v5H5zM12 18h8"/></svg>';
 const deleteIcon = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14M10 11v6m4-6v6"/></svg>';
@@ -32,7 +34,10 @@ async function render() {
   const db = await dbPromise;
   const [foods, outbox, lastSync] = await Promise.all([db.getAll('foods'), db.getAll('outbox'), db.get('meta', 'lastSync')]);
   const pendingIds = new Set(outbox.map(item => item.food?.id ?? item.id));
+  const conflicts = outbox.filter(item => item.conflictServer);
+  const conflictingIds = new Set(conflicts.map(item => item.food?.id ?? item.id));
   foods.sort((a, b) => a.date.localeCompare(b.date) || a.createdAt - b.createdAt);
+  setShareFoods(foods);
   $('#food-count').textContent = String(foods.length);
   $('#empty-state').hidden = foods.length !== 0;
   const rows = foods.map(food => {
@@ -49,18 +54,39 @@ async function render() {
     const past = food.date < localToday(); date.classList.toggle('past', past);
     date.append(past ? 'Date dépassée · ' : food.date === localToday() ? 'Date limite aujourd’hui · ' : 'Date limite · ', time);
     details.append(name, date);
-    if (pendingIds.has(food.id)) { const label = document.createElement('span'); label.className = 'pending-label'; label.textContent = 'En attente d’envoi'; details.append(label); }
+    if (pendingIds.has(food.id)) { const label = document.createElement('span'); label.className = 'pending-label'; label.textContent = conflictingIds.has(food.id) ? 'Conflit à résoudre' : 'En attente d’envoi'; details.append(label); }
+    const edit = document.createElement('button'); edit.type = 'button'; edit.className = 'text-button edit-food-button'; edit.textContent = 'Modifier'; edit.setAttribute('aria-label', `Modifier ${food.name}`); edit.disabled = conflictingIds.has(food.id); edit.addEventListener('click', () => beginEdit(food));
     const button = document.createElement('button'); button.className = 'delete-button'; button.type = 'button'; button.setAttribute('aria-label', `Supprimer ${food.name}`); button.innerHTML = deleteIcon;
+    button.disabled = conflictingIds.has(food.id);
     button.addEventListener('click', async () => {
       button.disabled = true;
-      try { await deleteFood(food.id); await render(); message(`${food.name} retiré du frigo.`); await sync(); }
+      try { await deleteFood(food.id); if (editingFood?.id === food.id) resetEditor(); await render(); message(`${food.name} retiré du frigo.`); await sync(); }
       catch { message('La suppression n’a pas pu être enregistrée. Réessayez.', true); button.disabled = false; }
     });
-    row.append(details, button); return row;
+    const actions = document.createElement('div'); actions.className = 'food-actions'; actions.append(edit, button);
+    row.append(details, actions); return row;
   });
   $('#food-list').replaceChildren(...rows);
+  $('#conflict-panel').hidden = !conflicts.length;
+  $('#conflict-list').replaceChildren(...conflicts.map(item => {
+    const block = document.createElement('div'); block.className = 'conflict-item';
+    const title = document.createElement('h3'); title.textContent = item.food?.name || item.conflictServer.name || 'Aliment supprimé';
+    const yours = document.createElement('p'); yours.textContent = item.type === 'delete' ? 'Votre choix : supprimer l’aliment.' : `Votre version : ${item.food.name}, ${item.food.date.split('-').reverse().join('/')}.`;
+    const server = document.createElement('p'); server.textContent = item.conflictServer.deleted ? 'Sur le serveur : aliment supprimé.' : `Sur le serveur : ${item.conflictServer.name}, ${item.conflictServer.date.split('-').reverse().join('/')}.`;
+    block.append(title, yours, server);
+    for (const [keepLocal, label] of [[true, 'Garder ma version'], [false, 'Prendre celle du serveur']]) {
+      const button = document.createElement('button'); button.type = 'button'; button.className = 'button secondary small'; button.textContent = label;
+      button.addEventListener('click', async () => {
+        button.disabled = true;
+        try { await resolveConflict(item.sequence, keepLocal); await render(); await sync(); }
+        catch { message('Le choix n’a pas pu être enregistré. Réessayez.', true); button.disabled = false; }
+      });
+      block.append(button);
+    }
+    return block;
+  }));
   const count = outbox.length;
-  $('#sync-status').textContent = syncing ? `Envoi au serveur… ${count} action${count > 1 ? 's' : ''} restante${count > 1 ? 's' : ''}.` : count ? `${count} action${count > 1 ? 's' : ''} en attente${syncError ? ' — nouvel essai à la prochaine ouverture ou reconnexion.' : ' — envoi au retour du réseau.'}` : lastSync ? 'Toutes les actions ont été envoyées au serveur.' : 'Vos aliments sont enregistrés sur cet appareil.';
+  $('#sync-status').textContent = conflicts.length ? `${conflicts.length} conflit${conflicts.length > 1 ? 's' : ''} à résoudre ci-dessous.` : syncing ? `Envoi au serveur… ${count} action${count > 1 ? 's' : ''} restante${count > 1 ? 's' : ''}.` : count ? `${count} action${count > 1 ? 's' : ''} en attente${syncError ? ' — nouvel essai à la prochaine ouverture ou reconnexion.' : ' — envoi au retour du réseau.'}` : lastSync ? 'Toutes les actions ont été envoyées au serveur.' : 'Vos aliments sont enregistrés sur cet appareil.';
   networkState();
 }
 async function scheduleBackgroundSync() {
@@ -86,13 +112,29 @@ $('#food-form').addEventListener('submit', async event => {
   if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) { message('Indiquez une date valide.', true); return; }
   saving = true; $('#add-button').disabled = true;
   try {
-    await saveFood({ id: crypto.randomUUID(), name, date, photoData, createdAt: Date.now() });
-    $('#food-form').reset(); clearPhoto(); stopCamera();
-    message(`${name} ajouté et enregistré sur cet appareil.`);
+    if (editingFood) await updateFood({ ...editingFood, name, date, photoData }, editingFood.version ?? 1);
+    else await saveFood({ id: crypto.randomUUID(), name, date, photoData, createdAt: Date.now() });
+    const wasEditing = !!editingFood; resetEditor();
+    message(`${name} ${wasEditing ? 'modifié' : 'ajouté'} et enregistré sur cet appareil.`);
     await render(); $('#food-name').focus(); await sync();
   } catch { message('L’aliment n’a pas pu être enregistré. Le stockage est peut-être plein ou indisponible. Votre saisie est conservée.', true); }
   finally { saving = false; $('#add-button').disabled = false; }
 });
+
+function beginEdit(food) {
+  stopCamera(); editingFood = { ...food };
+  $('#food-name').value = food.name; $('#food-date').value = food.date; photoData = food.photoData;
+  $('#photo-preview-panel').hidden = !photoData;
+  if (photoData) $('#photo-preview').src = photoData;
+  $('#add-title').textContent = 'Modifier l’aliment'; $('#add-button').textContent = 'Enregistrer les modifications'; $('#cancel-edit-button').hidden = false;
+  $('#food-name').focus();
+}
+function resetEditor() {
+  editingFood = null; $('#food-form').reset(); clearPhoto(); stopCamera();
+  $('#add-title').textContent = 'Ajouter un aliment'; $('#add-button').textContent = 'Ajouter au frigo'; $('#cancel-edit-button').hidden = true;
+}
+$('#cancel-edit-button').addEventListener('click', resetEditor);
+setupShare();
 
 function stopCamera() {
   stream?.getTracks().forEach(track => track.stop()); stream = null;
@@ -200,5 +242,7 @@ async function start() {
     } catch { message('Le mode hors ligne n’a pas pu être préparé. Vérifiez la connexion et rechargez la page.', true); }
   }
   await sync();
+  // Setting up existing subscriptions never asks permission on page load.
+  if (registration) navigator.serviceWorker.ready.then(reg => setupPush(reg)).catch(() => { $('#push-message').textContent = 'Les notifications n’ont pas pu être préparées.'; });
 }
 start().catch(() => message('L’application n’a pas pu démarrer. Rechargez la page.', true));

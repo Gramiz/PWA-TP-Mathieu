@@ -7,7 +7,7 @@ Projet réalisé pour le TP Progressive Web Apps, en HTML, CSS et JavaScript, sa
 - [Document technique](DOC-TECHNIQUE.md)
 - [Tests et résultats](VALIDATION.md)
 
-On peut ajouter un aliment avec sa date limite, prendre une photo facultative et supprimer un aliment consommé. La liste est triée par date limite. Les ajouts et suppressions fonctionnent hors ligne et sont envoyés au serveur à la reconnexion.
+On peut ajouter un aliment avec sa date limite, prendre une photo facultative, le modifier et le supprimer. La liste est triée par date limite. Les ajouts et suppressions fonctionnent hors ligne et sont envoyés au serveur à la reconnexion.
 
 ## Lancer le projet
 
@@ -28,6 +28,14 @@ Après une modification, lancer `npm run build`, puis recharger la page. Si une 
 
 Le bandeau **Installer** ouvre la demande du navigateur quand elle est disponible. Sur iPhone, ouvrir le site dans Safari, puis choisir **Partager → Sur l’écran d’accueil → Ajouter**. Le bandeau rappelle ces étapes.
 
+## Bonus
+
+- **Partager la liste** ouvre le menu natif du téléphone avec les noms et les dates. L’annulation ou l’absence de l’API est indiquée.
+- **Activer les notifications** permet de recevoir un rappel le matin pour les dates atteintes. Sur iPhone, utiliser l’app installée. Le bouton **Tester une notification** envoie un vrai push depuis Netlify. Les rappels peuvent être désactivés.
+- **Modifier** permet de changer un aliment. Si deux onglets modifient la même version hors ligne, le serveur refuse la seconde écriture avec `412`. L’app propose de garder la version locale ou celle du serveur.
+
+Les rappels sont planifiés à 8 h UTC, soit 9 h en hiver et 10 h en été à Paris. Ils utilisent les données déjà reçues par le serveur.
+
 ## Tests
 
 ```bash
@@ -39,6 +47,7 @@ Avec le serveur local lancé dans un autre terminal :
 ```bash
 npm run test:browser
 node tests/sync-engines.mjs
+node tests/bonuses.mjs
 ```
 
 Les tests navigateur utilisent Google Chrome sur macOS. Sur un autre système, définir `CHROME_PATH` avec le chemin de Chrome ou Chromium. La caméra est simulée pendant ces tests.
@@ -51,11 +60,11 @@ TEST_URL=https://vide-frigo-mathieu-tp.netlify.app node tests/production.mjs
 
 L’installation, la caméra et le mode avion ont aussi été testés sur iPhone. Le test automatisé Firefox n’a pas pu démarrer sur la machine de développement.
 
-Lighthouse mobile sur Netlify, le 12 octobre 2026 : **100** en performance, accessibilité, bonnes pratiques et SEO ; **CLS : 0**. Les rapports locaux sont dans `test-results/`, qui est ignoré par Git.
+Lighthouse mobile sur Netlify, le 12 octobre 2026 : **98** en performance et **100** en accessibilité, bonnes pratiques et SEO ; **CLS : 0**. Les rapports locaux sont dans `test-results/`, qui est ignoré par Git.
 
 ## Déployer sur Netlify
 
-Le projet utilise des fichiers statiques, une fonction serveur et Netlify Blobs. Déposer uniquement `dist/` par glisser-déposer ne suffit donc pas.
+Le projet utilise des fichiers statiques, des fonctions serveur et Netlify Blobs. Déposer uniquement `dist/` par glisser-déposer ne suffit donc pas.
 
 Pour republier sur le projet Netlify existant :
 
@@ -67,6 +76,8 @@ npx netlify deploy --prod --no-build
 ```
 
 Il faut avoir accès au projet Netlify. Pour créer son propre site, utiliser `npx netlify sites:create` et remplacer `SITE_URL` par sa nouvelle URL. On peut aussi importer le dépôt dans Netlify ; `netlify.toml` indique la commande de build et les dossiers à publier.
+
+Pour les push, configurer les clés serveur une seule fois : `node scripts/configure-push.mjs`, après connexion du CLI Netlify. Cette commande conserve les clés existantes et n’affiche pas la clé privée. Les variables `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` et `VAPID_SUBJECT` sont nécessaires aux fonctions. Le fichier `.env` est ignoré par Git.
 
 Les données sont conservées dans Netlify Blobs et restent présentes entre les déploiements. Le badge Netlify a été désactivé dans les réglages du projet, car il provoquait des erreurs avec la CSP.
 
@@ -92,6 +103,6 @@ tests/                Tests de l’API et de la PWA
 netlify.toml           Configuration Netlify et en-têtes de sécurité
 ```
 
-La version actuelle ne propose pas de compte, de recettes, de scanner ou de notifications. Les données appartiennent à cet appareil ; elles ne sont pas récupérées automatiquement sur un autre téléphone.
+La version actuelle ne propose pas de compte, de recettes ou de scanner. Les données appartiennent à cet appareil ; elles ne sont pas récupérées automatiquement sur un autre téléphone.
 
-Il reste à déclarer l’URL, le dépôt, la description et la capacité **caméra** sur le Class Hub.
+Il reste à déclarer l’URL, le dépôt, la description et les capacités **caméra et partage**, ainsi que les bonus **push et conflits** sur le Class Hub.

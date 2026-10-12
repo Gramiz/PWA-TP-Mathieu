@@ -13,7 +13,7 @@ L’installation, la caméra et le mode avion avec reconnexion ont été testés
 
 | Vérification | Résultat |
 |---|---|
-| API : création, doublons, suppression, séparation des appareils, validation des données et erreurs | 5 tests réussis |
+| API : création, doublons, suppression, séparation des appareils, validation des données et erreurs | 9 tests réussis |
 | Manifest et icônes | Aucun problème relevé ; tailles 192×192 et 512×512 |
 | Ouverture et rechargement hors ligne | Interface et aliments accessibles |
 | Fermeture puis réouverture hors ligne | Aliments conservés |
@@ -30,13 +30,21 @@ L’installation, la caméra et le mode avion avec reconnexion ont été testés
 
 La caméra et la demande native d’installation sont simulées dans les tests automatisés. Le test Background Sync vérifie le traitement de l’événement ; il ne mesure pas le délai choisi par le navigateur.
 
+## Bonus vérifiés
+
+- Partage : texte de la liste transmis au menu natif simulé ; annulation gérée.
+- Conflits : deux onglets modifient la même version hors ligne. Sur Netlify, la seconde action reçoit `412` ; les choix garder ma version et prendre celle du serveur sont vérifiés. Les tests unitaires couvrent aussi les écritures simultanées et le rejeu d’une action déjà reçue.
+- Push : abonnement réel dans un profil Chrome normal, envoi depuis Netlify, réception dans le Service Worker et désactivation vérifiés. Le refus de permission est testé séparément.
+- Rappels : tests unitaires des dates atteintes, du maximum d’un envoi par jour et de la suppression d’un abonnement expiré. Le passage automatique de la tâche quotidienne reste à observer ; aucun rappel du lendemain n’est présenté comme déjà reçu.
+- Total : 12 tests unitaires (9 API, 3 push). Les nouveaux bonus restent à tester sur le téléphone, en complément des essais de la version initiale.
+
 ## Lighthouse
 
 Mesure en mode mobile sur le site Netlify, avec Lighthouse 13.5 :
 
 | Mesure | Résultat |
 |---|---|
-| Performance | 100 |
+| Performance | 98 |
 | Accessibilité | 100 |
 | Bonnes pratiques | 100 |
 | SEO | 100 |
@@ -55,8 +63,11 @@ Les scores proviennent d’un test Lighthouse. L’INP en usage réel n’a pas 
 npm test
 npm run test:browser
 node tests/sync-engines.mjs
+node tests/bonuses.mjs
 TEST_URL=https://vide-frigo-mathieu-tp.netlify.app node tests/production.mjs
 ```
+
+Pour vérifier le trajet push réel : `TEST_URL=https://vide-frigo-mathieu-tp.netlify.app node tests/push-browser.mjs`. Ce test utilise un profil Chrome normal temporaire, car les abonnements push sont refusés en navigation privée.
 
 Le serveur local doit être lancé pour les tests locaux. `tests/update-production.mjs` permet de tester une mise à jour pendant un nouveau déploiement. Les rapports et captures sont dans `test-results/`, ignoré par Git. Les aliments créés pendant les tests sont des exemples, pas les données du frigo personnel.
 

@@ -1,11 +1,23 @@
 import { flushOutbox } from './sync.js';
 
 const CACHE_NAME = 'vide-frigo-__BUILD_VERSION__';
-const APP_SHELL = ['/', '/index.html', '/styles.css', '/app.js', '/db.js', '/sync.js', '/vendor/idb.js', '/manifest.webmanifest', '/offline.html', '/icons/icon-192.png', '/icons/icon-512.png'];
+const APP_SHELL = ['/', '/index.html', '/styles.css', '/app.js', '/db.js', '/sync.js', '/capabilities.js', '/vendor/idb.js', '/manifest.webmanifest', '/offline.html', '/icons/icon-192.png', '/icons/icon-512.png'];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)));
   // Waiting is intentional: the page offers the update before activating it.
+});
+self.addEventListener('push', event => {
+  let payload = { title: 'Vide-frigo', body: 'Consultez vos dates limites.', tag: 'vide-frigo-dates' };
+  try { if (event.data) payload = { ...payload, ...event.data.json() }; } catch { /* An invalid payload still produces a visible notification. */ }
+  event.waitUntil(self.registration.showNotification(payload.title, { body: payload.body, tag: payload.tag, icon: '/icons/icon-192.png', badge: '/icons/icon-192.png', data: { url: '/' } }));
+});
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  event.waitUntil((async () => {
+    for (const client of await self.clients.matchAll({ type: 'window', includeUncontrolled: true })) if (client.url.startsWith(self.location.origin + '/')) { await client.focus(); return; }
+    await self.clients.openWindow('/');
+  })());
 });
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {

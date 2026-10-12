@@ -32,7 +32,7 @@ try {
   await context.setOffline(false);
   await expect(page.locator('#sync-status')).toHaveText('Toutes les actions ont été envoyées au serveur.',{timeout:40000});
   const remote=await context.request.get(origin+'/api/foods?id='+local.food.id,{headers:{Authorization:`Bearer ${local.token}`}});
-  assert.equal(remote.status(),200); assert.deepEqual(await remote.json(),local.food);
+  assert.equal(remote.status(),200); const stored=await remote.json(); assert.equal(stored.id,local.food.id); assert.equal(stored.photoData,local.food.photoData); assert.equal(stored.name,local.food.name);
   console.log('OK — création et photo hors ligne, rechargement, puis réception réelle dans Netlify Blobs');
   const other=await context.request.get(origin+'/api/foods?id='+local.food.id,{headers:{Authorization:`Bearer ${'b'.repeat(64)}`}});assert.equal(other.status(),404);
   await context.setOffline(true); await page.getByRole('button',{name:'Supprimer Test déploiement — photo facultative',exact:true}).click();

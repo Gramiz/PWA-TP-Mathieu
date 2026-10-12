@@ -5,7 +5,7 @@ export function deviceKey(request) {
   const token = request.headers.get('authorization')?.match(/^Bearer ([a-f0-9]{64})$/)?.[1];
   return token ? createHash('sha256').update(token).digest('hex') : null;
 }
-function json(value, status = 200) {
+export function json(value, status = 200) {
   return Response.json(value, { status, headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'X-Robots-Tag': 'noindex' } });
 }
 export function validDate(value) {
@@ -28,7 +28,7 @@ export async function handleFoods(request, store) {
     const id = new URL(request.url).searchParams.get('id');
     if (!UUID.test(id ?? '')) return json({ error: 'Identifiant invalide.' }, 400);
     const food = await store.get(`${device}/${id}`, { type: 'json' });
-    return food && !food.deleted ? json(food) : json({ error: 'Aliment introuvable.' }, 404);
+    return food && !food.deleted ? json({ ...food, version: food.version ?? 1 }) : json({ error: 'Aliment introuvable.' }, 404);
   }
   if (request.method !== 'POST') return json({ error: 'Méthode non autorisée.' }, 405);
   if (!request.headers.get('content-type')?.startsWith('application/json')) return json({ error: 'JSON attendu.' }, 415);
@@ -38,17 +38,29 @@ export async function handleFoods(request, store) {
   let data;
   try { data = JSON.parse(raw); } catch { return json({ error: 'JSON invalide.' }, 400); }
   if (!data || typeof data !== 'object') return json({ error: 'Action invalide.' }, 400);
-  const id = data.type === 'save' ? data.food?.id : data.id;
-  if (!UUID.test(id ?? '') || !['save', 'delete'].includes(data.type)) return json({ error: 'Action invalide.' }, 400);
+  const id = ['save', 'update'].includes(data.type) ? data.food?.id : data.id;
+  if (!UUID.test(id ?? '') || !['save', 'update', 'delete'].includes(data.type)) return json({ error: 'Action invalide.' }, 400);
   const key = `${device}/${id}`;
-  if (data.type === 'delete') {
-    // Tombstone: retrying an older creation cannot restore a deleted food.
-    await store.setJSON(key, { id, deleted: true });
-    return json({ ok: true, id });
-  }
   const food = data.food;
-  if (typeof food.name !== 'string' || !food.name.trim() || food.name.length > 80 || !validDate(food.date) || !validPhoto(food.photoData) || !Number.isSafeInteger(food.createdAt) || food.createdAt < 0) return json({ error: 'Aliment invalide.' }, 400);
-  const previous = await store.get(key, { type: 'json' });
-  if (!previous) await store.setJSON(key, { id, name: food.name.trim(), date: food.date, photoData: food.photoData ?? null, createdAt: food.createdAt });
-  return json({ ok: true, id });
+  if (data.type !== 'delete' && (typeof food?.name !== 'string' || !food.name.trim() || food.name.length > 80 || !validDate(food.date) || !validPhoto(food.photoData) || !Number.isSafeInteger(food.createdAt) || food.createdAt < 0)) return json({ error: 'Aliment invalide.' }, 400);
+  if (data.operationId !== undefined && !UUID.test(data.operationId)) return json({ error: 'Identifiant d’action invalide.' }, 400);
+  const record = store.getWithMetadata ? await store.getWithMetadata(key, { type: 'json' }) : null;
+  const previous = record?.data ?? (store.getWithMetadata ? null : await store.get(key, { type: 'json' }));
+  const current = previous ? { ...previous, version: previous.version ?? 1 } : { id, deleted: true, version: 0 };
+  if (previous && data.operationId && previous.lastOperation === data.operationId) return json({ ok: true, id, version: current.version });
+  if (data.type === 'save' && previous) return json({ ok: true, id, version: current.version });
+  // The same precondition is in JSON for proxies which strip If-Match.
+  const match = request.headers.get('if-match') ?? (Number.isSafeInteger(data.baseVersion) && data.baseVersion >= 0 ? `"${data.baseVersion}"` : null);
+  if ((data.type === 'update' || match) && match !== `"${current.version}"`) return json({ error: 'Cet aliment a changé sur le serveur.', code: 'VERSION_CONFLICT', current }, 412);
+  const version = current.version + 1;
+  const value = data.type === 'delete' ? { id, deleted: true, version } : { id, name: food.name.trim(), date: food.date, photoData: food.photoData ?? null, createdAt: food.createdAt, version };
+  if (data.operationId) value.lastOperation = data.operationId;
+  const result = await store.setJSON(key, value, record ? { onlyIfMatch: record.etag } : { onlyIfNew: true });
+  // The ETag precondition also covers a concurrent write between read and save.
+  if (result?.modified === false) {
+    const latest = await store.get(key, { type: 'json' });
+    if (latest?.lastOperation === data.operationId && data.operationId) return json({ ok: true, id, version: latest.version });
+    return json({ error: 'Cet aliment a changé sur le serveur.', code: 'ATOMIC_CONFLICT', current: latest ?? { id, deleted: true, version: 0 } }, 412);
+  }
+  return json({ ok: true, id, version });
 }

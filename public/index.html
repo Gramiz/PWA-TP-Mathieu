@@ -34,7 +34,9 @@
   <main>
     <section class="intro" aria-labelledby="page-title">
       <h1 id="page-title">Mon frigo</h1>
+      <button id="share-button" class="button secondary" type="button">Partager la liste</button>
     </section>
+    <p id="share-message" class="field-help" role="status"></p>
     <div id="update-banner" class="notice update-notice" hidden><span>Une nouvelle version de Vide-frigo est disponible.</span><button id="update-button" class="button secondary small">Mettre à jour</button></div>
     <p id="offline-notice" class="notice" hidden>Hors ligne. Vos modifications seront envoyées à la reconnexion.</p>
     <div class="workspace">
@@ -48,11 +50,14 @@
           <div id="photo-preview-panel" hidden><img id="photo-preview" alt="Photo de l’aliment à ajouter"><button id="remove-photo-button" type="button" class="text-button">Retirer la photo</button></div>
           <p id="camera-message" class="field-help" role="status"></p>
           <button id="add-button" class="button primary" type="submit">Ajouter au frigo <span aria-hidden="true">+</span></button>
+          <button id="cancel-edit-button" type="button" class="text-button" hidden>Annuler la modification</button>
           <p id="form-message" class="form-message" role="status" aria-live="polite"></p>
         </form>
       </section>
       <section class="list-panel" aria-labelledby="list-title"><div class="list-heading"><h2 id="list-title">Mes aliments <span id="food-count" class="count">0</span></h2><span class="sort-label">Dates les plus proches d’abord</span></div><p id="sync-status" class="sync-status" role="status" aria-live="polite">Chargement des aliments…</p><ul id="food-list" class="food-list"></ul><div id="empty-state" class="empty-state" hidden><svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M10 16h28v24H10zM8 8h32v8H8zM19 25h10"/></svg><h3>Aucun aliment.</h3></div></section>
     </div>
+    <section id="conflict-panel" class="conflict-panel" aria-labelledby="conflict-title" hidden><h2 id="conflict-title">Modifications à départager</h2><div id="conflict-list"></div></section>
+    <section class="push-panel" aria-labelledby="push-title"><div><h2 id="push-title">Rappels de dates limites</h2><p>Recevoir une notification le matin pour les aliments dont la date est atteinte.</p></div><div class="push-actions"><button id="push-button" class="button secondary" type="button" disabled>Activer les notifications</button><button id="push-test-button" class="text-button" type="button" hidden>Tester une notification</button></div><p id="push-message" class="field-help" role="status"></p></section>
     <details class="public-examples"><summary>Exemples d’aliments</summary><ul class="examples"><li>Yaourts nature</li><li>Salade en sachet</li><li>Lait</li></ul></details>
   </main>
   <aside id="install-banner" class="install-banner" aria-label="Installer Vide-frigo">

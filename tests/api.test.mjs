@@ -5,7 +5,15 @@ import { handleFoods } from '../netlify/lib/api.js';
 
 function memoryStore() {
   const values = new Map();
-  return { async get(key) { return values.get(key) ?? null; }, async setJSON(key, value) { values.set(key, structuredClone(value)); } };
+  const etags = new Map();
+  return {
+    async get(key) { return values.get(key) ?? null; },
+    async getWithMetadata(key) { return values.has(key) ? { data: values.get(key), etag: etags.get(key) } : null; },
+    async setJSON(key, value, options = {}) {
+      if ((options.onlyIfNew && values.has(key)) || (options.onlyIfMatch && etags.get(key) !== options.onlyIfMatch)) return { modified: false };
+      values.set(key, structuredClone(value)); etags.set(key, randomUUID()); return { modified: true };
+    },
+  };
 }
 const token = 'a'.repeat(64);
 function request(action, auth = token) {
@@ -19,11 +27,38 @@ function food() { return { id: randomUUID(), name: 'Yaourts', date: '2026-10-15'
 test('création persistée, rejeu idempotent et suppression non ressuscitée', async () => {
   const store = memoryStore(); const value = food(); const action = { type: 'save', food: value };
   assert.equal((await handleFoods(request(action), store)).status, 200);
-  assert.deepEqual(await (await handleFoods(read(value.id), store)).json(), value);
+  assert.deepEqual(await (await handleFoods(read(value.id), store)).json(), { ...value, version: 1 });
   assert.equal((await handleFoods(request(action), store)).status, 200);
   assert.equal((await handleFoods(request({ type: 'delete', id: value.id }), store)).status, 200);
   assert.equal((await handleFoods(request(action), store)).status, 200);
   assert.equal((await handleFoods(read(value.id), store)).status, 404);
+});
+test('deux modifications de v1 : la seconde reçoit 412, puis résolution en v2', async () => {
+  const store = memoryStore(); const value = food();
+  await handleFoods(request({ type: 'save', food: value }), store);
+  const edit = (name, version, operationId = randomUUID()) => { const req = request({ type: 'update', food: { ...value, name }, operationId }); req.headers.set('If-Match', `"${version}"`); return req; };
+  const first = edit('Version A', 1); assert.equal((await handleFoods(first, store)).status, 200);
+  const conflict = await handleFoods(edit('Version B', 1), store);
+  assert.equal(conflict.status, 412); assert.equal((await conflict.json()).current.name, 'Version A');
+  assert.equal((await handleFoods(edit('Version B', 2), store)).status, 200);
+  const final = await (await handleFoods(read(value.id), store)).json(); assert.equal(final.name, 'Version B'); assert.equal(final.version, 3);
+});
+test('ETag atomique : deux écritures simultanées ne peuvent pas toutes deux gagner', async () => {
+  const store = memoryStore(); const value = food(); await handleFoods(request({ type: 'save', food: value }), store);
+  const edits = ['A', 'B'].map(name => { const req = request({ type: 'update', food: { ...value, name }, operationId: randomUUID() }); req.headers.set('If-Match', '"1"'); return req; });
+  const results = await Promise.all(edits.map(req => handleFoods(req, store)));
+  assert.deepEqual(results.map(r => r.status).sort(), [200, 412]);
+});
+test('un envoi déjà reçu peut être rejoué sans nouveau conflit ni version', async () => {
+  const store = memoryStore(); const value = food(); await handleFoods(request({ type: 'save', food: value }), store);
+  const action = { type: 'update', food: { ...value, name: 'Modifié' }, operationId: randomUUID() };
+  for (let i = 0; i < 2; i++) { const req = request(action); req.headers.set('If-Match', '"1"'); const res = await handleFoods(req, store); assert.equal(res.status, 200); assert.equal((await res.json()).version, 2); }
+});
+test('précondition dans le corps conservée quand un proxy retire If-Match', async () => {
+  const store = memoryStore(); const value = food(); await handleFoods(request({ type: 'save', food: value }), store);
+  const update = () => request({ type: 'update', food: { ...value, name: 'Modifié' }, baseVersion: 1, operationId: randomUUID() });
+  assert.equal((await handleFoods(update(), store)).status, 200);
+  assert.equal((await handleFoods(update(), store)).status, 412);
 });
 test('un appareil ne peut pas lire les aliments d’un autre', async () => {
   const store = memoryStore(); const value = food();
