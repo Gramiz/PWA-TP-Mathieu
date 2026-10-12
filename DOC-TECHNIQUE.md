@@ -94,7 +94,7 @@ Lighthouse 13.5, mode mobile, sur Netlify le 12 octobre 2026 :
 
 L’INP en conditions réelles n’a pas été mesuré. La place du statut réseau et de la liste est réservée pour éviter les décalages. Aucune erreur de console n’a été relevée.
 
-Les 12 tests unitaires et les scénarios navigateur couvrent l’API, le hors ligne, les photos, la synchronisation, les erreurs, les mises à jour et les bonus. Le partage est simulé ; les conflits et push sont vérifiés sur Netlify. Background Sync fonctionne dans le test avec l’onglet fermé. Les trois fichiers de visibilité répondent `200`. L’installation, la caméra et le mode avion avec reconnexion ont aussi été testés sur iPhone. Détails dans `VALIDATION.md`.
+Les 12 tests unitaires et les scénarios navigateur couvrent l’API, le hors ligne, les photos, la synchronisation, les erreurs, les mises à jour et les bonus. Le partage est simulé ; les conflits et push sont vérifiés sur Netlify. Background Sync fonctionne dans le test avec l’onglet fermé. Les fichiers de visibilité répondent `200`. L’installation, la caméra et le mode avion avec reconnexion ont aussi été testés sur iPhone.
 
 ## 12. Limites et suite
 

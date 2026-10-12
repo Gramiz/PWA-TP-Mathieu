@@ -5,7 +5,6 @@ Projet réalisé pour le TP Progressive Web Apps, en HTML, CSS et JavaScript, sa
 - Application : https://vide-frigo-mathieu-tp.netlify.app
 - Dépôt : https://github.com/Gramiz/PWA-TP-Mathieu
 - [Document technique](DOC-TECHNIQUE.md)
-- [Tests et résultats](VALIDATION.md)
 
 On peut ajouter un aliment avec sa date limite, prendre une photo facultative, le modifier et le supprimer. La liste est triée par date limite. Les ajouts et suppressions fonctionnent hors ligne et sont envoyés au serveur à la reconnexion.
 
