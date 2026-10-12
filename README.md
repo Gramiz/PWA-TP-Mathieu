@@ -7,6 +7,7 @@ Dépôt public : **https://github.com/Gramiz/PWA-TP-Mathieu**.
 
 La version publique a été testée avec création et photo hors ligne, rechargement, synchronisation réelle vers Netlify Blobs et suppression.
 La mise à jour a aussi été validée entre deux déploiements Netlify, avec bannière et conservation des données sans effacement manuel du cache.
+L’auteur confirme les tests d’installation, caméra et mode avion sur iPhone. Après correction du chargement, Lighthouse mobile sur Netlify mesure un CLS de 0 et 100 dans les quatre catégories ; le badge Netlify est désactivé sans assouplir la CSP.
 
 Ajouter un aliment (nom, date limite, photo caméra facultative), consulter les dates les plus proches en premier et supprimer un aliment consommé. Installation, fonctionnement hors ligne, synchronisation vers un serveur et mise à jour proposée.
 

@@ -1,68 +1,49 @@
 # Validation du TP Vide-frigo
 
-Date : 11 octobre 2026. Aucun résultat de production ou téléphone réel n’est supposé.
+Dernière vérification : 12 octobre 2026.
+URL publique : https://vide-frigo-mathieu-tp.netlify.app
+Dépôt public : https://github.com/Gramiz/PWA-TP-Mathieu
 
-## Réalisé et vérifié localement
+## Fonctionnalités vérifiées
 
-- Build sans framework ; bibliothèques `idb` et `@netlify/blobs` ; aucune vulnérabilité dans les dépendances de production au contrôle npm.
-- Cinq tests API : création persistée, rejeu idempotent, suppression, isolation par appareil, validation d’entrées et refus d’origine étrangère, échec du stockage sans faux succès.
-- Chromium : Service Worker actif, ouverture et rechargement hors ligne, ajout hors ligne, tri, données conservées après fermeture/réouverture.
-- Navigation inconnue hors ligne : page de secours et retour au frigo.
-- Reconnexion : file vidée et entrées reçues au serveur local (vérification par GET authentifié).
-- Background Sync Chromium : événement déclenché via DevTools avec l’onglet de l’application fermé ; entrée reçue au serveur et outbox vidée. Cela vérifie le handler, sans promettre un délai automatique du navigateur.
-- Caméra simulée : capture, compression JPEG, photo locale et reçue au serveur, arrêt du flux.
-- Refus caméra simulé : message et ajout sans photo.
-- HTTP 503 en restant connecté : file conservée et envoi à la réouverture.
-- Suppression hors ligne puis reçue au serveur.
-- Nouveau build : bannière de mise à jour, activation après clic, ancien cache supprimé, données conservées.
-- Mise en page desktop et mobile 390 px ; absence de débordement horizontal et d’erreur JavaScript.
-- Lighthouse 13.5 mobile local : performance 99, accessibilité 100, bonnes pratiques 100, SEO 100. LCP 1,7 s ; CLS 0,059 ; TBT 0 ms. L’INP nécessite des mesures terrain et n’est pas déduit du TBT.
-- `curl` local : contenu public présent ; robots.txt, sitemap.xml, llms.txt, manifest et deux icônes répondent 200.
-- `netlify build --offline` : build et packaging de la fonction `foods.mjs` réussis.
+- [x] HTTPS public et affichage mobile.
+- [x] Manifest sans erreur, icônes 192×192 et 512×512, standalone et couleurs.
+- [x] Installation et caméra réelle sur iPhone : confirmées par l’auteur.
+- [x] Mode avion, réouverture, ajout/suppression et reconnexion sur iPhone : confirmés par l’auteur. Ces confirmations sont distinctes des tests automatisés.
+- [x] Chromium : interface et données hors ligne, tri et persistance après fermeture/réouverture.
+- [x] Page de secours sur une navigation inconnue hors ligne.
+- [x] Outbox et repli online : aliment avec photo créé hors ligne, conservé après rechargement, puis reçu dans Netlify Blobs réel. Suppression synchronisée et isolation par appareil vérifiées.
+- [x] Background Sync Chromium : événement déclenché via DevTools avec l’onglet fermé ; réception serveur et file vidée. Le navigateur décide du moment d’exécution automatique.
+- [x] Photo simulée : capture, compression, arrêt du flux et réception serveur ; refus caméra simulé sans bloquer l’ajout.
+- [x] HTTP 503 : actions conservées et nouvel envoi au lancement.
+- [x] Redéploiement réel : bannière, activation du nouveau SW, nettoyage des caches et conservation des données sans effacement manuel.
+- [x] Contenu public dans le HTML initial ; robots.txt, sitemap.xml et llms.txt répondent 200. Canonical, titre, description, Open Graph et JSON-LD présents.
+- [x] README de lancement et document technique liés dans le dépôt public.
+- [ ] Déclaration sur le Class Hub : prise en charge par l’auteur.
 
-Le test Firefox automatisé n’a pas pu démarrer son profil de navigateur sur cette machine. Le SW est produit au format classique et le repli online est vérifié sous Chromium ; le scénario sur Firefox/Safari reste à effectuer sur un navigateur réel.
+## Correction du chargement et du widget Netlify
 
-## Vérifié sur Netlify
+L’ancien audit mesurait un CLS de 0,244 et des erreurs CSP du widget Netlify. Le bandeau d’installation a ensuite supprimé le gros décalage de l’en-tête ; la mesure avant la présente correction était de 0,019. L’espace réservé au statut réseau et à la liste supprime les petits déplacements restants.
 
-URL publique : https://vide-frigo-mathieu-tp.netlify.app (publication du 11 octobre 2026).
+Le badge est désactivé via Project configuration → General → Powered by Netlify badge. La modification concerne ce projet seulement ; la CSP stricte est conservée.
 
-- Accès HTTPS sans connexion Netlify : 200.
-- HTML initial : titres, formulaire, exemples et URLs absolues de production présents, y compris après le retrait des paragraphes explicatifs.
-- robots.txt, sitemap.xml, llms.txt, manifest et icônes : 200.
-- En-tête Content-Security-Policy présent.
-- Chromium mobile simulé : interface rechargée hors ligne ; ajout avec photo JPEG capturée par caméra simulée ; données conservées après rechargement.
-- Reconnexion : outbox vidée après acquittement ; aliment et photo retrouvés par GET dans le stockage Netlify Blobs réel.
-- Un autre identifiant d’appareil ne peut pas lire cette entrée.
-- Suppression hors ligne puis reconnexion : entrée supprimée du serveur (404), sans erreur JavaScript.
-- Deuxième déploiement réel : session déjà ouverte, bannière reçue, clic Mettre à jour, nouveau cache actif et ancien supprimé ; aliment local et copie Blobs conservés. Aucun effacement manuel du cache.
+Lighthouse 13.5 mobile **sur la production après correction** :
 
-Commande reproductible : `TEST_URL=https://vide-frigo-mathieu-tp.netlify.app node tests/production.mjs`. Les données de test sont synthétiques et supprimées après vérification.
+| Mesure | Résultat |
+|---|---|
+| Performance | 100 |
+| Accessibilité | 100 |
+| Bonnes pratiques | 100 |
+| SEO | 100 |
+| LCP | 1,0 s |
+| CLS | 0 |
+| TBT | 0 ms |
+| Erreurs console / CSP | Aucune |
 
-## Audit de conformité après épuration de l’interface
+Ces résultats sont des mesures de laboratoire, sans revendication d’INP terrain. Connexion lente et CPU ralenti : mise en page stable. Pas de débordement à 320, 390 et 1200 px. Le test de production avec photo hors ligne et synchronisation Blobs passe après redéploiement.
 
-Bandeau d’installation ajouté ensuite : visible sur mobile, instructions Safari au clic sur Installer, fermeture conservée dans la session, masqué en standalone et demande native simulée vérifiés. Publication confirmée sur Netlify. Il ne remplace pas le test d’installation sur un vrai téléphone.
+## Limites et preuves
 
-- Tests API : 5/5 ; scénario de production avec photo hors ligne, rechargement, réception Blobs et suppression : réussi.
-- Manifest : aucune erreur de parsing ; icônes vérifiées à 192×192 et 512×512. Le diagnostic Chrome dans un profil normal ne signale aucune erreur d’installabilité. Cela ne remplace pas l’installation sur téléphone.
-- HTML demandé avec User-Agent GPTBot : 200 et exemples publics présents. La suppression des paragraphes ne supprime donc pas le contenu public du HTML initial.
-- Page de secours testée sur Netlify avec réseau coupé : affichée pour une navigation inconnue.
-- **Nouvelles mesures de production**, distinctes des anciennes mesures locales : performance **87**, accessibilité **100**, bonnes pratiques **92**, SEO **100** ; LCP **1,1 s**, CLS **0,244**, TBT **0 ms**.
-- **Point à corriger** : le CLS dépasse le seuil recommandé de 0,1. Lighthouse identifie le déplacement de `main` ; la cause exacte du décalage reste à isoler.
-- Des styles et scripts inline dans un document `about:srcdoc` du widget Netlify sont bloqués par la CSP. La CSP du projet n’a pas été affaiblie pour masquer ces erreurs.
-- Dépôt public : https://github.com/Gramiz/PWA-TP-Mathieu ; URL renseignée dans le README et le document technique.
-- Installation réelle, caméra sur téléphone, repli Safari/Firefox et dépôt sur le Class Hub : restent à effectuer.
+Le navigateur automatisé Firefox ne démarre pas sur cette machine ; il n’est pas présenté comme testé. L’installation et les essais caméra sur iPhone sont déclarés par l’auteur. La publication Hub n’a pas été effectuée par l’agent.
 
-## À vérifier avant de rendre
-
-- [x] Authentification Netlify, déploiement HTTPS public et stockage Blobs réels.
-- [x] Dépôt public ; URLs renseignées dans le README et le document technique.
-- [ ] Manifest sans erreur dans DevTools et installation réelle sur téléphone.
-- [ ] Caméra réelle après clic, refus de permission et fonctionnement en mode avion.
-- [ ] Background Sync sur Chromium, notamment onglet fermé ; repli online sur Safari/Firefox.
-- [x] Redéploiement Netlify : nouvelle version proposée sans vider le cache.
-- [x] Requêtes HTTP sans authentification sur la production : contenu public HTML et réponses 200 des trois fichiers.
-- [ ] Fiche du Class Hub : nom, URL, dépôt, description, caméra.
-
-## Reproduire les preuves
-
-`npm test`, `npm run test:browser`, Lighthouse et commandes `curl` du README. Les rapports et captures locaux sont dans `test-results/` et ne sont pas livrés comme résultats de production.
+Tests reproductibles : `npm test`, `npm run test:browser`, `node tests/sync-engines.mjs` et `TEST_URL=https://vide-frigo-mathieu-tp.netlify.app node tests/production.mjs`. Le test de mise à jour s’exécute avec `tests/update-production.mjs` pendant un nouveau déploiement. Rapports et captures : `test-results/`, ignoré par Git. Les données de test sont synthétiques.

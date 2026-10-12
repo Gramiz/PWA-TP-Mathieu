@@ -1,6 +1,6 @@
 # Vide-frigo — Technical Design Doc
 
-Auteur : Mathieu · 11 octobre 2026 · Statut : draft (validation locale)
+Auteur : Mathieu · 12 octobre 2026 · Statut : final
 Production : https://vide-frigo-mathieu-tp.netlify.app · Dépôt public : https://github.com/Gramiz/PWA-TP-Mathieu.
 
 ## 1. TL;DR
@@ -55,9 +55,9 @@ Le HTML initial contient titres, formulaire et exemples publics ; les aliments p
 Nom, date et photo sont stockés sur l’appareil puis envoyés en HTTPS au serveur. Un jeton aléatoire d’appareil reste dans IndexedDB ; son empreinte délimite les clés serveur. Ce jeton sert de capacité d’accès, sans constituer un compte utilisateur. Le serveur valide noms, UUID, dates et JPEG, limite les tailles, contrôle Origin et ne propose aucune liste publique. Le rendu des noms utilise `textContent`. Aucun secret Netlify côté client. CSP, nosniff, Referrer-Policy, X-Frame-Options, HSTS et Permissions-Policy sont configurés dans `netlify.toml`. Pas de tracker.
 
 ## 11. Mesures
-Local, Chromium desktop et viewport mobile ; Lighthouse 13.5 mobile : performance **99**, accessibilité **100**, bonnes pratiques **100**, SEO **100**, LCP **1,7 s**, CLS **0,059**, TBT **0 ms**. Mesures de laboratoire ; aucun INP terrain revendiqué. Les 5 tests API et les scénarios PWA passent : hors ligne, persistance, tri, secours, envoi serveur, photo simulée, refus, HTTP 503, suppression et mise à jour. Background Sync est déclenché via DevTools avec l’onglet fermé. Netlify public : HTML/fichiers répondent 200 ; création avec photo hors ligne, envoi vers Blobs et suppression vérifiés. Un second déploiement valide la bannière, l’activation et la conservation des données. Firefox automatisé ne démarre pas ici. Voir `VALIDATION.md`.
+Lighthouse 13.5 mobile sur Netlify, le 12 octobre 2026, après stabilisation : performance **100**, accessibilité **100**, bonnes pratiques **100**, SEO **100** ; LCP **1,0 s**, CLS **0**, TBT **0 ms**. Aucune erreur console ou CSP. Ce sont des mesures de laboratoire ; aucun INP terrain n’est revendiqué. Le statut réseau et la liste disposent d’un espace réservé pour éviter les décalages. Le badge Netlify est désactivé dans les réglages du projet, sans assouplir la CSP.
 
-Après épuration, Lighthouse sur **Netlify** : performance **87**, accessibilité **100**, bonnes pratiques **92**, SEO **100** ; LCP **1,1 s**, CLS **0,244**, TBT **0 ms**. Le CLS reste à corriger ; des erreurs CSP viennent du widget Netlify (`about:srcdoc`). Manifest sans erreur, icônes aux bonnes dimensions, diagnostic Chrome d’installabilité sans erreur et page de secours vérifiés. Ces contrôles ne remplacent pas l’installation et la caméra sur téléphone.
+Les 5 tests API et les scénarios PWA passent : hors ligne, persistance, tri, secours, envoi serveur, photo simulée, refus, HTTP 503, suppression et mise à jour. Background Sync est déclenché via DevTools avec l’onglet fermé. Netlify public : HTML/fichiers répondent 200 ; création avec photo hors ligne, envoi réel vers Blobs et suppression revérifiés après correction. Un redéploiement a validé la bannière et la conservation des données. L’auteur confirme installation, caméra et mode avion/reconnexion sur iPhone ; cette preuve utilisateur est distincte des tests automatisés. Voir `VALIDATION.md`.
 
-## 12. Limites et suite
-Premier accès sans réseau impossible. Sans Background Sync, la page doit être ouverte lors de la reconnexion ou relancée. Le navigateur peut évincer le stockage ; effacer les données du site perd aussi l’identifiant d’appareil. Pas de restauration serveur, d’authentification personnelle ou de synchronisation multi-appareil. Installation et caméra réelle sur téléphone, repli Firefox/Safari et publication Hub restent à valider par l’auteur. La v2 est hors périmètre.
+## 12. Limites connues et suite
+Premier accès sans réseau impossible. Sans Background Sync, la page doit être ouverte lors de la reconnexion ou relancée. Le navigateur peut évincer le stockage ; effacer les données du site perd aussi l’identifiant d’appareil. Pas de restauration serveur, d’authentification personnelle ou de synchronisation multi-appareil. Le navigateur automatisé Firefox ne démarre pas dans cet environnement ; les tests iPhone sont déclarés par l’auteur. La fiche du Class Hub sera déposée par l’auteur. Une éventuelle v2 pourrait proposer une restauration serveur, hors périmètre du TP.
