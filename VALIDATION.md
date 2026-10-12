@@ -38,6 +38,12 @@ La caméra et la demande native d’installation sont simulées dans les tests a
 - Rappels : tests unitaires des dates atteintes, du maximum d’un envoi par jour et de la suppression d’un abonnement expiré. Le passage automatique de la tâche quotidienne reste à observer ; aucun rappel du lendemain n’est présenté comme déjà reçu.
 - Total : 12 tests unitaires (9 API, 3 push). Les nouveaux bonus restent à tester sur le téléphone, en complément des essais de la version initiale.
 
+## SEO/GEO : corrections après le rapport du Class Hub
+
+Le premier rapport du Hub indiquait 86/100. Les corrections ajoutent les décisions explicites pour les sept agents IA, la date `lastmod` du sitemap et une présentation Markdown liée dans le HTML et `llms.txt`. La présentation est servie en `text/markdown` avec `X-Robots-Tag: noindex`. Le manifest reçoit le type `application/manifest+json` au lieu de `application/octet-stream`.
+
+Les fichiers déployés ont été vérifiés en HTTP 200, ainsi que le JSON du manifest et les en-têtes Markdown. Le nouveau score du Hub reste à mesurer : le bouton Actualiser dans la session invitée conserve le rapport de 10 h 24.
+
 ## Lighthouse
 
 Mesure en mode mobile sur le site Netlify, avec Lighthouse 13.5 :

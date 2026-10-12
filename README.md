@@ -88,9 +88,10 @@ curl -s https://vide-frigo-mathieu-tp.netlify.app/
 curl -I https://vide-frigo-mathieu-tp.netlify.app/robots.txt
 curl -I https://vide-frigo-mathieu-tp.netlify.app/sitemap.xml
 curl -I https://vide-frigo-mathieu-tp.netlify.app/llms.txt
+curl -I https://vide-frigo-mathieu-tp.netlify.app/presentation.md
 ```
 
-Le HTML contient les titres, le formulaire et les exemples. Les trois fichiers répondent `200`. Les aliments personnels ne sont pas dans le contenu public.
+Le HTML contient les titres, le formulaire et les exemples. Les fichiers répondent `200`. Le HTML lie aussi une présentation Markdown ; le sitemap indique la date du build et robots.txt précise les règles des sept agents IA du cours. Les aliments personnels ne sont pas dans le contenu public.
 
 ## Fichiers du projet
 

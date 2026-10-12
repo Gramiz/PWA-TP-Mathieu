@@ -15,5 +15,20 @@ Allow: /
 Disallow: /api/
 Disallow: /.netlify/functions/
 
+# Les moteurs de recherche IA peuvent lire la présentation publique.
+User-agent: OAI-SearchBot
+User-agent: Claude-SearchBot
+User-agent: PerplexityBot
+Allow: /
+Disallow: /api/
+Disallow: /.netlify/functions/
+
+# Même choix pour Common Crawl et Google-Extended : contenu public seulement.
+User-agent: CCBot
+User-agent: Google-Extended
+Allow: /
+Disallow: /api/
+Disallow: /.netlify/functions/
+
 Sitemap: __SITE_URL__/sitemap.xml
 # Guide public : __SITE_URL__/llms.txt

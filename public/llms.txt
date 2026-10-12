@@ -3,9 +3,12 @@
 
 ## Contenu public
 - [Liste d’aliments, formulaire et exemples](__SITE_URL__/)
+- [Présentation en Markdown](__SITE_URL__/presentation.md)
 
 ## Fonctionnement
 Les aliments sont créés par l’utilisateur et stockés sur son appareil dans IndexedDB.
-Les ajouts, photos facultatives et suppressions sont envoyés au serveur au retour du réseau.
+Les ajouts, modifications, photos facultatives et suppressions sont envoyés au serveur au retour du réseau.
 Les aliments personnels ne sont pas publiés dans le HTML et ne font pas partie du contenu indexable.
 La caméra est utilisée uniquement après un clic ; son refus ne bloque pas l’ajout.
+La liste peut être partagée par le menu du téléphone. Les rappels push sont facultatifs.
+En cas de conflit de modification, l’utilisateur choisit entre sa version et celle du serveur.

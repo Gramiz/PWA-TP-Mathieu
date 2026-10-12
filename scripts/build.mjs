@@ -5,6 +5,7 @@ import { build } from 'esbuild';
 
 const configured = process.env.SITE_URL || process.env.URL || 'http://localhost:8888';
 const siteURL = new URL(configured);
+const lastModified = new Date().toISOString().slice(0, 10);
 if (!['http:', 'https:'].includes(siteURL.protocol) || siteURL.pathname !== '/' || siteURL.username || siteURL.password) throw new Error('SITE_URL doit être une URL d’origine sans chemin.');
 await rm('dist', { recursive: true, force: true });
 await cp('public', 'dist', { recursive: true });
@@ -29,8 +30,8 @@ async function walk(directory) {
     if ((await stat(path)).isDirectory()) await walk(path);
     else {
       let value = await readFile(path);
-      if (/\.(html|xml|txt)$/.test(name)) {
-        value = Buffer.from(value.toString().replaceAll('__SITE_URL__', siteURL.origin));
+      if (/\.(html|xml|txt|md)$/.test(name)) {
+        value = Buffer.from(value.toString().replaceAll('__SITE_URL__', siteURL.origin).replaceAll('__LAST_MODIFIED__', lastModified));
         await writeFile(path, value);
       }
       hash.update(path); hash.update(value);

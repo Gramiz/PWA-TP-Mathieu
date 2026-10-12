@@ -75,7 +75,7 @@ Netlify conserve l’abonnement. Une fonction vérifie les dates à 8 h UTC et e
 
 Titres, formulaire et exemples figurent dans le HTML initial. Les aliments personnels viennent d’IndexedDB et restent absents du HTML public.
 
-La page contient titre, description, canonical, Open Graph et JSON-LD `WebApplication`. `robots.txt` autorise GPTBot et ClaudeBot à lire les pages publiques qui décrivent l’app, mais exclut l’API. `sitemap.xml` référence l’accueil ; `llms.txt` renvoie à cette page. Le build utilise `SITE_URL` ou l’URL Netlify.
+La page contient titre, description, canonical, Open Graph et JSON-LD `WebApplication`. `robots.txt` indique un choix explicite pour les sept agents IA du cours : accès au contenu public, API exclue. `sitemap.xml` référence l’accueil avec la date du build. `llms.txt` et le HTML renvoient aussi à `presentation.md`, une présentation Markdown ; elle est en `noindex` pour éviter un doublon dans les résultats de recherche. Le build utilise `SITE_URL` ou l’URL Netlify.
 
 ## 10. Sécurité et vie privée
 
