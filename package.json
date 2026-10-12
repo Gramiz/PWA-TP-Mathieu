@@ -1,0 +1,26 @@
+{
+  "name": "vide-frigo",
+  "version": "1.0.0",
+  "description": "TP PWA sans framework : aliments, dates limites et photo facultative",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "npm run build && node scripts/serve.mjs",
+    "start": "node scripts/serve.mjs",
+    "test": "node --test tests/api.test.mjs",
+    "test:browser": "node tests/browser.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "@netlify/blobs": "^11.1.4",
+    "idb": "^8.0.4"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.0",
+    "esbuild": "^0.28.2",
+    "lighthouse": "^13.5.0",
+    "netlify-cli": "^27.12.0"
+  }
+}

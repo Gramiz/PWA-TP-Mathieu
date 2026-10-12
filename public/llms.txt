@@ -1,0 +1,11 @@
+# Vide-frigo
+> Liste d’aliments et de dates limites, installable et utilisable hors ligne.
+
+## Contenu public
+- [Liste d’aliments, formulaire et exemples](__SITE_URL__/)
+
+## Fonctionnement
+Les aliments sont créés par l’utilisateur et stockés sur son appareil dans IndexedDB.
+Les ajouts, photos facultatives et suppressions sont envoyés au serveur au retour du réseau.
+Les aliments personnels ne sont pas publiés dans le HTML et ne font pas partie du contenu indexable.
+La caméra est utilisée uniquement après un clic ; son refus ne bloque pas l’ajout.

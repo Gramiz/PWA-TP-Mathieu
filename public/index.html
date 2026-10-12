@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#245e43">
+  <title>Vide-frigo — vos aliments, dans le bon ordre</title>
+  <meta name="description" content="Gardez vos aliments et leurs dates limites à portée de main. Vide-frigo s’installe, fonctionne hors ligne et synchronise vos ajouts au retour du réseau.">
+  <link rel="canonical" href="__SITE_URL__/">
+  <meta property="og:title" content="Vide-frigo — vos aliments, dans le bon ordre">
+  <meta property="og:description" content="Une liste d’aliments et de dates limites, disponible même sans connexion.">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="fr_FR">
+  <meta property="og:url" content="__SITE_URL__/">
+  <meta property="og:image" content="__SITE_URL__/icons/icon-512.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="stylesheet" href="/styles.css">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Vide-frigo","url":"__SITE_URL__/","applicationCategory":"LifestyleApplication","operatingSystem":"Any","description":"Liste d’aliments et de dates limites, installable et utilisable hors ligne."}</script>
+  <script type="module" src="/app.js"></script>
+</head>
+<body class="install-banner-visible">
+  <!-- Vide-frigo / Operate. Étiquettes de réserve : titres courts, lignes lisibles, dates visibles.
+  Structure : en-tête, ajout et liste ; pas de fonctions au-delà du TP.
+  Couleurs : blanc et vert profond, contraste lisible dans une cuisine éclairée.
+  États : vide, hors ligne, envoi en attente, erreur, permission refusée.
+  Mobile : formulaire avant liste, contrôles tactiles, photos facultatives. -->
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Vide-frigo, accueil"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect x="7" y="3" width="18" height="25" rx="3"/><path d="M7 13h18M11 7v3m0 7v5M10 28v2m12-2v2"/></svg>Vide-frigo<span class="brand-dot">.</span></a>
+    <div class="header-actions"><span id="network-status" class="network-status" role="status">Vérification du réseau</span></div>
+  </header>
+  <main>
+    <section class="intro" aria-labelledby="page-title">
+      <h1 id="page-title">Mon frigo</h1>
+    </section>
+    <div id="update-banner" class="notice update-notice" hidden><span>Une nouvelle version de Vide-frigo est disponible.</span><button id="update-button" class="button secondary small">Mettre à jour</button></div>
+    <p id="offline-notice" class="notice" hidden>Hors ligne. Vos modifications seront envoyées à la reconnexion.</p>
+    <div class="workspace">
+      <section class="add-panel" aria-labelledby="add-title">
+        <h2 id="add-title">Ajouter un aliment</h2>
+        <form id="food-form">
+          <div class="field"><label for="food-name">Nom de l’aliment</label><input id="food-name" name="name" maxlength="80" placeholder="Ex. : yaourts nature" required autocomplete="off"></div>
+          <div class="field"><label for="food-date">Date limite</label><input id="food-date" name="date" type="date" min="1900-01-01" max="9999-12-31" required></div>
+          <div class="photo-field"><div class="label-line"><span>Photo</span><span class="optional">Facultative</span></div><button id="camera-button" type="button" class="button camera-button"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 5l1-2h6l1 2h4a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V7a2 2 0 012-2z"/><circle cx="12" cy="12" r="4"/></svg>Prendre une photo</button></div>
+          <div id="camera-panel" hidden><video id="camera-video" autoplay muted playsinline aria-label="Aperçu de la caméra"></video><div class="camera-actions"><button id="capture-button" type="button" class="button secondary">Photographier</button><button id="stop-camera-button" type="button" class="text-button">Fermer la caméra</button></div></div>
+          <div id="photo-preview-panel" hidden><img id="photo-preview" alt="Photo de l’aliment à ajouter"><button id="remove-photo-button" type="button" class="text-button">Retirer la photo</button></div>
+          <p id="camera-message" class="field-help" role="status"></p>
+          <button id="add-button" class="button primary" type="submit">Ajouter au frigo <span aria-hidden="true">+</span></button>
+          <p id="form-message" class="form-message" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+      <section class="list-panel" aria-labelledby="list-title"><div class="list-heading"><h2 id="list-title">Mes aliments <span id="food-count" class="count">0</span></h2><span class="sort-label">Dates les plus proches d’abord</span></div><p id="sync-status" class="sync-status" role="status" aria-live="polite">Chargement des aliments…</p><ul id="food-list" class="food-list"></ul><div id="empty-state" class="empty-state" hidden><svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M10 16h28v24H10zM8 8h32v8H8zM19 25h10"/></svg><h3>Aucun aliment.</h3></div></section>
+    </div>
+    <details class="public-examples"><summary>Exemples d’aliments</summary><ul class="examples"><li>Yaourts nature</li><li>Salade en sachet</li><li>Lait</li></ul></details>
+  </main>
+  <aside id="install-banner" class="install-banner" aria-label="Installer Vide-frigo">
+    <div class="install-banner-content"><strong>Vide-frigo sur votre écran d’accueil</strong><p>Installez l’app sur votre téléphone.</p></div>
+    <button id="install-button" class="button primary install-action" type="button" aria-expanded="false" aria-controls="install-instructions">Installer</button>
+    <button id="dismiss-install-button" class="dismiss-install-button" type="button" aria-label="Fermer le bandeau d’installation"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+    <p id="install-instructions" class="install-instructions" role="status" hidden></p>
+  </aside>
+  <footer><span>Vide-frigo</span><p id="ios-install-help" hidden>Sur iPhone : menu Partager de Safari → Sur l’écran d’accueil.</p></footer>
+</body>
+</html>

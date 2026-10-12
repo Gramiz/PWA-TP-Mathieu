@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /.netlify/functions/
+
+# Le contenu public décrit le projet ; les aliments ne sont pas dans le HTML.
+User-agent: GPTBot
+Allow: /
+Disallow: /api/
+Disallow: /.netlify/functions/
+
+# Même accès à la présentation publique pour Claude.
+User-agent: ClaudeBot
+Allow: /
+Disallow: /api/
+Disallow: /.netlify/functions/
+
+Sitemap: __SITE_URL__/sitemap.xml
+# Guide public : __SITE_URL__/llms.txt
