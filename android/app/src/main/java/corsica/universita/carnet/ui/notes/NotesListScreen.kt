@@ -23,29 +23,42 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import corsica.universita.carnet.R
 import corsica.universita.carnet.data.Note
 import corsica.universita.carnet.ui.theme.CarnetTheme
 import java.text.DateFormat
 import java.util.Date
 
+@Composable
+fun NotesListScreen(viewModel: NotesViewModel = viewModel()) {
+    val notes by viewModel.notes.collectAsStateWithLifecycle()
+    val draft by viewModel.draft.collectAsStateWithLifecycle()
+    NotesListContent(
+        notes = notes,
+        draft = draft,
+        onDraftChange = viewModel::onDraftChange,
+        onAdd = viewModel::addNote,
+        onDelete = viewModel::deleteNote,
+    )
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NotesListScreen() {
-    val notes = remember { mutableStateListOf<Note>() }
-    var draft by rememberSaveable { mutableStateOf("") }
-
+private fun NotesListContent(
+    notes: List<Note>,
+    draft: String,
+    onDraftChange: (String) -> Unit,
+    onAdd: () -> Unit,
+    onDelete: (Long) -> Unit,
+) {
     Scaffold(
         topBar = { TopAppBar(title = { Text(stringResource(R.string.app_name)) }) },
     ) { padding ->
@@ -58,16 +71,13 @@ fun NotesListScreen() {
             ) {
                 OutlinedTextField(
                     value = draft,
-                    onValueChange = { draft = it },
+                    onValueChange = onDraftChange,
                     label = { Text(stringResource(R.string.draft_hint)) },
                     modifier = Modifier.weight(1f),
                 )
                 Button(
                     enabled = draft.isNotBlank(),
-                    onClick = {
-                        notes.add(0, Note(draft.trim(), System.currentTimeMillis()))
-                        draft = ""
-                    },
+                    onClick = onAdd,
                 ) { Text(stringResource(R.string.add)) }
             }
             Text(
@@ -76,12 +86,12 @@ fun NotesListScreen() {
                 style = MaterialTheme.typography.bodyMedium,
             )
             LazyColumn(modifier = Modifier.weight(1f)) {
-                items(notes) { note ->
+                items(notes, key = { it.id }) { note ->
                     ListItem(
                         headlineContent = { Text(note.text) },
                         supportingContent = { Text(note.createdAt.toDateTime()) },
                         trailingContent = {
-                            IconButton(onClick = { notes.remove(note) }) {
+                            IconButton(onClick = { onDelete(note.id) }) {
                                 Icon(
                                     imageVector = Icons.Default.Delete,
                                     contentDescription = stringResource(R.string.delete_note, note.text),
@@ -104,5 +114,5 @@ private fun Long.toDateTime(): String = DateFormat.getDateTimeInstance(
 @Preview(showBackground = true)
 @Composable
 private fun NotesListScreenPreview() {
-    CarnetTheme { NotesListScreen() }
+    CarnetTheme { NotesListContent(emptyList(), "", {}, {}, {}) }
 }

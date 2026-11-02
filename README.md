@@ -146,7 +146,7 @@ Le dossier `android/` reprend le starter du professeur : même package `corsica.
 
 A1 ajoute `data/Note.kt`, le formulaire et la liste dans `NotesListScreen.kt`, ainsi que les textes et pluriels dans `strings.xml`. On peut ajouter et supprimer des notes ; leur date de création et le compteur s’affichent. Un texte vide ou composé d’espaces ne peut pas être ajouté.
 
-Les notes utilisent `remember { mutableStateListOf<Note>() }`. Le brouillon utilise `rememberSaveable`. À la rotation, la liste redevient donc vide et le brouillon reste. Il n’y a ni ViewModel ni Room à cette étape.
+À l’étape A1, les notes utilisaient `remember { mutableStateListOf<Note>() }` et le brouillon utilisait `rememberSaveable`. À la rotation, la liste redevient donc vide et le brouillon reste. Il n’y a ni ViewModel ni Room à cette étape.
 
 Pour compiler puis installer, depuis `android/` :
 
@@ -159,4 +159,23 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 Dans Android Studio, ouvrir `android/`. Pour le contrôle demandé par le cours, lancer Layout Inspector sur Carnet et retrouver `Scaffold`, `Column`, `Row` et la liste. Le starter demande une version récente d’Android Studio compatible avec AGP 9.4.1.
 
-Vérifié dans l’émulateur Android API 36.1 : ajout de trois notes, compteur, suppression, bouton désactivé pour une saisie blanche, brouillon conservé après rotation et liste remise à zéro. Les deux échecs du cours ont aussi été reproduits avec des variantes temporaires : liste ordinaire non observable, puis brouillon en `remember` perdu à la rotation. Seule la version corrigée est conservée. Les captures locales sont dans `test-results/` ; la vérification visuelle de l’arbre dans Layout Inspector reste à faire dans Android Studio.
+Vérifié dans l’émulateur Android API 36.1 : ajout de trois notes, compteur, suppression, bouton désactivé pour une saisie blanche, brouillon conservé après rotation et liste remise à zéro. Les deux échecs du cours ont aussi été reproduits avec des variantes temporaires : liste ordinaire non observable, puis brouillon en `remember` perdu à la rotation. La version A1 corrigée est disponible dans le commit `a800e34` ; le dossier `android/` évolue avec les TD suivants. Les captures locales sont dans `test-results/` ; la vérification visuelle de l’arbre dans Layout Inspector reste à faire dans Android Studio.
+
+## TD Android A2 : cycle de vie
+
+`NotesViewModel` porte désormais la liste dans un `StateFlow<List<Note>>`. Chaque note a un identifiant `Long`. L’écran collecte la liste et le brouillon avec `collectAsStateWithLifecycle` ; les ajouts et suppressions passent par le ViewModel. La liste n’est plus stockée dans le composable.
+
+Le brouillon est enregistré dans un `SavedStateHandle`. La liste et le brouillon survivent à une rotation ; après une mort du process en arrière-plan, seul le brouillon est restauré. La liste vide est attendue : le stockage disque arrive au TD A4.
+
+`MainActivity` écrit les événements de son cycle de vie dans Logcat avec le tag `Carnet` et un identifiant d’instance. Le ViewModel trace aussi sa création, pour vérifier qu’une rotation ne le recrée pas.
+
+```bash
+adb logcat -s Carnet
+# Mettre l’app en arrière-plan avant cette commande :
+adb shell am kill corsica.universita.carnet
+# Revenir par les applications récentes, sans forcer l’arrêt ni retirer la tâche.
+```
+
+L’option « Ne pas conserver les activités » se trouve dans les options développeur d’Android. Elle détruit l’Activity quand on la quitte ; elle ne simule pas à elle seule la mort du process. La désactiver après l’essai.
+
+Contrôles A2 réalisés dans l’émulateur API 36.1 : ajout et suppression par identifiant, liste et brouillon conservés à la rotation, deux instances d’Activity et une seule création du ViewModel dans Logcat. Une variante temporaire sans sauvegarde a montré la perte du brouillon à la mort du process. Avec la version finale, `am kill` a arrêté le process ; au retour, le PID a changé, le brouillon a été restauré et la liste était vide. L’interrupteur réel « Ne pas conserver les activités » a aussi été testé, puis désactivé, avec rétablissement des réglages initiaux. Les traces et captures restent dans `test-results/`, hors Git.
