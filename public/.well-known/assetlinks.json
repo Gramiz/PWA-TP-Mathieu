@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.netlify.vide_frigo_mathieu_tp.twa",
+      "sha256_cert_fingerprints": [
+        "E6:B5:2E:A0:6F:0C:9D:1A:72:11:57:26:B5:FF:5B:24:94:E8:96:AE:BD:8E:C0:36:89:63:99:99:8B:B7:94:BA"
+      ]
+    }
+  }
+]

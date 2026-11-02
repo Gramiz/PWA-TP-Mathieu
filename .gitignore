@@ -5,3 +5,15 @@ dist/
 .env
 test-results/
 
+
+# Android A0 : secrets, machine locale et fichiers générés
+twa/.secrets/
+twa/.local/
+twa/.gradle/
+twa/.idea/
+twa/local.properties
+twa/app/build/
+twa/build/
+twa/*.apk
+twa/*.aab
+twa/*.idsig

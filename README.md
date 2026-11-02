@@ -106,3 +106,36 @@ netlify.toml           Configuration Netlify et en-têtes de sécurité
 La version actuelle ne propose pas de compte, de recettes ou de scanner. Les données appartiennent à cet appareil ; elles ne sont pas récupérées automatiquement sur un autre téléphone.
 
 Il reste à déclarer l’URL, le dépôt, la description et les capacités **caméra et partage**, ainsi que les bonus **push et conflits** sur le Class Hub.
+
+## TD Android A0 : Vide-frigo en TWA
+
+Le dossier `twa/` contient le projet Android généré avec Bubblewrap 1.13.2 depuis le manifest de Vide-frigo. Le package est `app.netlify.vide_frigo_mathieu_tp.twa`. L’icône, le nom et les couleurs viennent du manifest. L’app affiche la PWA dans Chrome, sans barre d’adresse quand l’association du domaine est vérifiée.
+
+Le minimum Android est API 26 ; le projet Bubblewrap compile et cible API 36. A0 a été testé le 2 novembre 2026 sur l’émulateur Android API 36.1 disponible sur la machine. Le minimum par défaut du générateur (21) a été relevé pour être compatible avec Android Browser Helper 2.7.4 ; les dépôts Gradle utilisent Google et Maven Central.
+
+La clé de signature et les mots de passe sont dans `twa/.secrets/`, ignoré par Git. Il faut sauvegarder ce dossier dans un emplacement privé : la même clé est nécessaire pour mettre l’APK à jour. Ne pas publier `signing.env` ou `android.keystore`.
+
+Pour reconstruire sur cette machine, après installation de Bubblewrap :
+
+```bash
+npm install -g @bubblewrap/cli@1.13.2
+cd twa
+set -a
+. ./.secrets/signing.env
+set +a
+bubblewrap build --config=.local/bubblewrap.json
+```
+
+`.local/bubblewrap.json` contient les chemins du JDK et du SDK de cette machine ; ce dossier est également ignoré par Git. Sur une autre machine, configurer Bubblewrap avec son JDK et son SDK Android. Les sorties locales sont `twa/app-release-signed.apk` et `twa/app-release-bundle.aab` ; elles ne sont pas commitées.
+
+Installation et contrôle, avec ADB accessible dans le terminal :
+
+```bash
+adb install -r app-release-signed.apk
+adb shell pm verify-app-links --re-verify app.netlify.vide_frigo_mathieu_tp.twa
+adb shell pm get-app-links app.netlify.vide_frigo_mathieu_tp.twa
+```
+
+L’association est publiée dans `public/.well-known/assetlinks.json` et servie par Netlify en HTTPS, HTTP 200, `application/json`, sans redirection. La signature de l’APK correspond à cette empreinte. Android renvoie `verified`, le vérificateur Google Digital Asset Links renvoie `linked: true` et Vide-frigo s’ouvre sans barre d’adresse dans l’émulateur. Le contrôle automatique PWA Quality Criteria intégré à Bubblewrap n’a pas pu s’exécuter ; ces vérifications ont été réalisées séparément.
+
+Les TD A1 et suivants ne sont pas commencés.
