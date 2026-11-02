@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -20,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -30,7 +32,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import corsica.universita.carnet.R
 import corsica.universita.carnet.data.Note
 import corsica.universita.carnet.ui.theme.CarnetTheme
@@ -38,7 +39,11 @@ import java.text.DateFormat
 import java.util.Date
 
 @Composable
-fun NotesListScreen(viewModel: NotesViewModel = viewModel()) {
+fun NotesListScreen(
+    viewModel: NotesViewModel,
+    onShare: (Note) -> Unit,
+    onOpenPwa: () -> Unit,
+) {
     val notes by viewModel.notes.collectAsStateWithLifecycle()
     val draft by viewModel.draft.collectAsStateWithLifecycle()
     NotesListContent(
@@ -47,6 +52,8 @@ fun NotesListScreen(viewModel: NotesViewModel = viewModel()) {
         onDraftChange = viewModel::onDraftChange,
         onAdd = viewModel::addNote,
         onDelete = viewModel::deleteNote,
+        onShare = onShare,
+        onOpenPwa = onOpenPwa,
     )
 }
 
@@ -58,9 +65,20 @@ private fun NotesListContent(
     onDraftChange: (String) -> Unit,
     onAdd: () -> Unit,
     onDelete: (Long) -> Unit,
+    onShare: (Note) -> Unit,
+    onOpenPwa: () -> Unit,
 ) {
     Scaffold(
-        topBar = { TopAppBar(title = { Text(stringResource(R.string.app_name)) }) },
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.app_name)) },
+                actions = {
+                    TextButton(onClick = onOpenPwa) {
+                        Text(stringResource(R.string.open_pwa))
+                    }
+                },
+            )
+        },
     ) { padding ->
         Column(
             modifier = Modifier.fillMaxSize().padding(padding).imePadding().padding(16.dp),
@@ -91,11 +109,19 @@ private fun NotesListContent(
                         headlineContent = { Text(note.text) },
                         supportingContent = { Text(note.createdAt.toDateTime()) },
                         trailingContent = {
-                            IconButton(onClick = { onDelete(note.id) }) {
-                                Icon(
-                                    imageVector = Icons.Default.Delete,
-                                    contentDescription = stringResource(R.string.delete_note, note.text),
-                                )
+                            Row {
+                                IconButton(onClick = { onShare(note) }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Share,
+                                        contentDescription = stringResource(R.string.share_note, note.text),
+                                    )
+                                }
+                                IconButton(onClick = { onDelete(note.id) }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = stringResource(R.string.delete_note, note.text),
+                                    )
+                                }
                             }
                         },
                     )
@@ -114,5 +140,5 @@ private fun Long.toDateTime(): String = DateFormat.getDateTimeInstance(
 @Preview(showBackground = true)
 @Composable
 private fun NotesListScreenPreview() {
-    CarnetTheme { NotesListContent(emptyList(), "", {}, {}, {}) }
+    CarnetTheme { NotesListContent(emptyList(), "", {}, {}, {}, {}, {}) }
 }

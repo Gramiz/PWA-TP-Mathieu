@@ -5,6 +5,10 @@
     <string name="draft_hint">Nouvelle note</string>
     <string name="add">Ajouter</string>
     <string name="delete_note">Supprimer la note : %1$s</string>
+    <string name="share_note">Partager la note : %1$s</string>
+    <string name="share_chooser_title">Partager via…</string>
+    <string name="open_pwa">Ouvrir ma PWA</string>
+    <string name="browser_unavailable">Aucun navigateur disponible pour ouvrir Vide-frigo.</string>
     <plurals name="notes_count">
         <item quantity="one">%d note</item>
         <item quantity="other">%d notes</item>

@@ -23,6 +23,10 @@ class NotesViewModel(private val savedState: SavedStateHandle) : ViewModel() {
         savedState["draft"] = text
     }
 
+    fun receiveSharedText(text: String) {
+        onDraftChange(text)
+    }
+
     fun addNote() {
         val text = draft.value.trim()
         if (text.isEmpty()) return

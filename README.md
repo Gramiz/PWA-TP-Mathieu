@@ -179,3 +179,31 @@ adb shell am kill corsica.universita.carnet
 L’option « Ne pas conserver les activités » se trouve dans les options développeur d’Android. Elle détruit l’Activity quand on la quitte ; elle ne simule pas à elle seule la mort du process. La désactiver après l’essai.
 
 Contrôles A2 réalisés dans l’émulateur API 36.1 : ajout et suppression par identifiant, liste et brouillon conservés à la rotation, deux instances d’Activity et une seule création du ViewModel dans Logcat. Une variante temporaire sans sauvegarde a montré la perte du brouillon à la mort du process. Avec la version finale, `am kill` a arrêté le process ; au retour, le PID a changé, le brouillon a été restauré et la liste était vide. L’interrupteur réel « Ne pas conserver les activités » a aussi été testé, puis désactivé, avec rétablissement des réglages initiaux. Les traces et captures restent dans `test-results/`, hors Git.
+
+## TD Android A3 : Intents et App Links
+
+Chaque note a une action Partager (`ACTION_SEND`, `text/plain`) qui ouvre le sélecteur Android. Carnet accepte aussi le texte partagé par une autre application et le place dans le brouillon. `MainActivity` traite les Intents au premier lancement et dans `onNewIntent`, avec `launchMode="singleTop"`. Une rotation ne réapplique pas le texte de l’Intent initial au brouillon déjà modifié.
+
+Le bouton « Ouvrir ma PWA » ouvre Vide-frigo dans un navigateur. Le sélecteur `CATEGORY_APP_BROWSER` évite que l’App Link renvoie immédiatement dans Carnet.
+
+Dans `android/local.properties`, ajouter :
+
+```properties
+PWA_HOST=vide-frigo-mathieu-tp.netlify.app
+```
+
+Ce fichier reste local. Le manifest utilise `${pwaHost}` dans un filtre `VIEW` HTTPS avec `autoVerify`. `assetlinks.json` conserve l’entrée de la TWA et ajoute celle de `corsica.universita.carnet` avec l’empreinte SHA-256 réelle de la clé debug du cours. Le nom de package et l’empreinte doivent correspondre à l’APK installé.
+
+Après compilation, installation et publication du fichier :
+
+```bash
+adb shell pm verify-app-links --re-verify corsica.universita.carnet
+adb shell pm get-app-links corsica.universita.carnet
+adb shell am start -a android.intent.action.VIEW -d https://vide-frigo-mathieu-tp.netlify.app/
+```
+
+Un lien vers Vide-frigo doit ouvrir Carnet et remplir son brouillon avec l’URL. Le bouton d’ouverture de la PWA permet de retourner au site dans le navigateur.
+
+A3 vérifié dans l’émulateur API 36.1 : réception `ACTION_SEND` au démarrage et dans l’Activity déjà ouverte, partage d’une note via le sélecteur Android vers Carnet, partage réel depuis Chrome vers Carnet, et bouton d’ouverture du site dans Chrome sans boucle vers l’app. Le brouillon modifié survit à la rotation sans rejouer l’Intent d’origine. Un lien HTTPS implicite ouvre Carnet à chaud et à froid et préremplit le brouillon ; Android indique `verified`. Google Digital Asset Links confirme les associations de Carnet et de la TWA. `assembleDebug` et `lintDebug` réussissent ; les versions du starter sont conservées.
+
+Chrome peut partager dans une tâche Android distincte : elle a alors son propre ViewModel. Les notes restent en mémoire dans leur tâche d’origine jusqu’au stockage disque prévu en A4. Les captures et les traces des essais sont dans `test-results/`, ignoré par Git.
