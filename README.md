@@ -138,4 +138,25 @@ adb shell pm get-app-links app.netlify.vide_frigo_mathieu_tp.twa
 
 L’association est publiée dans `public/.well-known/assetlinks.json` et servie par Netlify en HTTPS, HTTP 200, `application/json`, sans redirection. La signature de l’APK correspond à cette empreinte. Android renvoie `verified`, le vérificateur Google Digital Asset Links renvoie `linked: true` et Vide-frigo s’ouvre sans barre d’adresse dans l’émulateur. Le contrôle automatique PWA Quality Criteria intégré à Bubblewrap n’a pas pu s’exécuter ; ces vérifications ont été réalisées séparément.
 
-Les TD A1 et suivants ne sont pas commencés.
+A0 est terminé. Le projet natif des TD suivants est dans `android/`.
+
+## TD Android A1 : Carnet
+
+Le dossier `android/` reprend le starter du professeur : même package `corsica.universita.carnet`, thème, dépendances, configuration Firebase et clé debug du cours. Il servira aussi aux TD suivants. Les versions du catalogue Gradle et les SDK 26 → 37 sont conservés.
+
+A1 ajoute `data/Note.kt`, le formulaire et la liste dans `NotesListScreen.kt`, ainsi que les textes et pluriels dans `strings.xml`. On peut ajouter et supprimer des notes ; leur date de création et le compteur s’affichent. Un texte vide ou composé d’espaces ne peut pas être ajouté.
+
+Les notes utilisent `remember { mutableStateListOf<Note>() }`. Le brouillon utilise `rememberSaveable`. À la rotation, la liste redevient donc vide et le brouillon reste. Il n’y a ni ViewModel ni Room à cette étape.
+
+Pour compiler puis installer, depuis `android/` :
+
+```bash
+./gradlew assembleDebug
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+```
+
+`local.properties` indique le chemin du SDK de la machine et reste hors Git. La clé `android/debug.keystore` est celle du starter, conservée localement. Pour reconstruire depuis un clone, recopier la clé fournie par le professeur à cet emplacement ; ne pas générer une autre clé.
+
+Dans Android Studio, ouvrir `android/`. Pour le contrôle demandé par le cours, lancer Layout Inspector sur Carnet et retrouver `Scaffold`, `Column`, `Row` et la liste. Le starter demande une version récente d’Android Studio compatible avec AGP 9.4.1.
+
+Vérifié dans l’émulateur Android API 36.1 : ajout de trois notes, compteur, suppression, bouton désactivé pour une saisie blanche, brouillon conservé après rotation et liste remise à zéro. Les deux échecs du cours ont aussi été reproduits avec des variantes temporaires : liste ordinaire non observable, puis brouillon en `remember` perdu à la rotation. Seule la version corrigée est conservée. Les captures locales sont dans `test-results/` ; la vérification visuelle de l’arbre dans Layout Inspector reste à faire dans Android Studio.

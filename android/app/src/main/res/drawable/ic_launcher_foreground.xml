@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icône provisoire : un carnet ocre avec trois lignes, dans la zone sûre (66 dp centrés sur 108). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path android:fillColor="#C58A2E" android:pathData="M34,28 h40 a4,4 0 0 1 4,4 v44 a4,4 0 0 1 -4,4 h-40 a4,4 0 0 1 -4,-4 v-44 a4,4 0 0 1 4,-4 z" />
+    <path android:fillColor="#FBF7EF" android:pathData="M40,40 h28 v4 h-28 z M40,50 h28 v4 h-28 z M40,60 h18 v4 h-18 z" />
+    <path android:fillColor="#1F2A1F" android:pathData="M30,34 h6 v4 h-6 z M30,52 h6 v4 h-6 z M30,70 h6 v4 h-6 z" />
+</vector>

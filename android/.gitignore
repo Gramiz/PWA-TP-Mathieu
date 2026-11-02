@@ -1,0 +1,17 @@
+# Gradle / Android Studio
+build/
+.gradle/
+.idea/
+.kotlin/
+*.iml
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Clés de signature : conservées localement, hors du dépôt public
+*.jks
+*.keystore
+
+# Divers
+.DS_Store

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Carnet</string>
+    <string name="ready">Carnet — prêt (v0.1, API 37)</string>
+    <string name="draft_hint">Nouvelle note</string>
+    <string name="add">Ajouter</string>
+    <string name="delete_note">Supprimer la note : %1$s</string>
+    <plurals name="notes_count">
+        <item quantity="one">%d note</item>
+        <item quantity="other">%d notes</item>
+    </plurals>
+</resources>

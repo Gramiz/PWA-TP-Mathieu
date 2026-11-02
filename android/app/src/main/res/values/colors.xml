@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Palette « Carnet » : vert sauge et ocre (aussi dans ui/theme/Color.kt) -->
+    <color name="carnet_sage">#5F7A61</color>
+    <color name="carnet_sage_light">#B9CDBA</color>
+    <color name="carnet_ochre">#C58A2E</color>
+    <color name="carnet_paper">#FBF7EF</color>
+    <color name="carnet_ink">#1F2A1F</color>
+</resources>
